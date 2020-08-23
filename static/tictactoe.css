@@ -1,0 +1,13 @@
+.square {
+    border-width: 1px;
+    border: solid;
+    padding: 0px;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    vertical-align: center;
+}
+
+table {
+    border-collapse: collapse;
+}
