@@ -1,5 +1,18 @@
-let sock = new WebSocket('wss://127.0.0.1:8090/socket');
-const boardState = Array(9).fill('');
+let sock = new WebSocket('ws://127.0.0.1:8090/socket');
+
+fetch('http://127.0.0.1:8090/game/start')
+    .then(response => {
+        console.log( response );
+    });
+
+fetch('http://127.0.0.1:8090/game/place', {
+
+})
+.then(response => {
+    console.log( response );
+});
+
+let boardState = Array(9).fill('');
 let playerTurn = 1;
 const player = {
     1 : 'X',
@@ -7,25 +20,24 @@ const player = {
 }
 
 sock.onopen = function(event) {
-    alert('We did it!');
+    console.log('connected to socket');
 };
 
 sock.onmessage = function(event) {
     console.log(event);
     console.log(event.data);
-    alert('Whoo!');
-    const data = event.data;
+    const data = JSON.parse( event.data );
 
-    var type = data.type;
+    var name = data.name;
 
-    switch(type){
-        case 'placed':
-            var state = data.boardState;
-            var curTurn = data.curTurn;
-            var nextTurn = curTurn+1;
-            updatePlayerTurn(curTurn);
+    switch(name){
+        case 'place':
+            var board = data.data;
+            var state = board.split(',');
+
+            // updatePlayerTurn(curTurn);
+            playerTurn = ( playerTurn % 2 ) + 1;
             updateBoard(state);
-            updatePlayerTurn(nextTurn);
             break;
         case 'reset':
             updatePlayerTurn(1);
@@ -44,6 +56,26 @@ function updateBoard(state){
     draw();
 }
 
+function clickListener( id )
+{
+    return function( e )
+    {
+        console.log( 'clicked: ' + id )
+        let y = Math.floor(id / 3);
+        let x = id - (y * 3);
+
+        let msg = {
+            name : 'place',
+            data : {
+                x : x,
+                y : y,
+                player : playerTurn,
+            }
+        };
+        sock.send(JSON.stringify(msg));
+    }
+}
+
 function draw(){
     for(var i=0; i<boardState.length;i++){
         document.getElementById(i).innerHTML = boardState[i];
@@ -54,4 +86,8 @@ function draw(){
 
 window.onload = () => {
     draw();
+
+    document.querySelectorAll('#board td').forEach( e => {
+        e.addEventListener( 'click', clickListener( parseInt(e.id, 10) ) );
+    });
 };
